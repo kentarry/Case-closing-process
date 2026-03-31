@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>案件結案流程自動化</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a1f35;
+            --bg-input: #0d1225;
+            --border-color: #2a3352;
+            --border-focus: #6366f1;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --accent-hover: #818cf8;
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.3);
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .bg-animation {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: 0; overflow: hidden;
+        }
+
+        .bg-animation .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(80px); opacity: 0.15;
+            animation: float 20s infinite ease-in-out;
+        }
+        .bg-animation .orb:nth-child(1) { width: 500px; height: 500px; background: #6366f1; top: -100px; right: -100px; }
+        .bg-animation .orb:nth-child(2) { width: 400px; height: 400px; background: #8b5cf6; bottom: -80px; left: -80px; animation-delay: -7s; }
+        .bg-animation .orb:nth-child(3) { width: 300px; height: 300px; background: #06b6d4; top: 50%; left: 50%; animation-delay: -14s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 40px) scale(0.9); }
+            75% { transform: translate(-40px, -20px) scale(1.05); }
+        }
+
+        .container { position: relative; z-index: 1; width: 100%; max-width: 520px; padding: 20px; }
+
+        .card {
+            background: linear-gradient(135deg, rgba(26, 31, 53, 0.95), rgba(17, 24, 39, 0.95));
+            border: 1px solid var(--border-color); border-radius: 24px;
+            padding: 36px; backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.1);
+        }
+
+        .header { text-align: center; margin-bottom: 28px; }
+
+        .header .icon {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 14px; font-size: 24px;
+            box-shadow: 0 8px 24px var(--accent-glow);
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 8px 24px var(--accent-glow); }
+            50% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.5); }
+        }
+
+        .header h1 {
+            font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-hover));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .header p { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+
+        .section { margin-bottom: 24px; }
+
+        .section-label {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 14px;
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, var(--border-color), transparent);
+        }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block; font-size: 13px; font-weight: 500;
+            color: var(--text-secondary); margin-bottom: 6px; transition: color 0.2s;
+        }
+        .form-group:focus-within label { color: var(--accent-hover); }
+
+        .input-wrapper { position: relative; }
+        .input-wrapper .input-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            font-size: 16px; color: var(--text-muted); transition: color 0.2s; pointer-events: none;
+        }
+        .form-group:focus-within .input-icon { color: var(--accent); }
+
+        input {
+            width: 100%; padding: 12px 14px 12px 42px;
+            background: var(--bg-input); border: 1px solid var(--border-color);
+            border-radius: 12px; color: var(--text-primary);
+            font-size: 14px; font-family: inherit;
+            transition: all 0.2s ease; outline: none;
+        }
+        input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-glow); }
+        input::placeholder { color: var(--text-muted); font-size: 13px; }
+
+        .case-row { display: grid; grid-template-columns: 140px 1fr; gap: 12px; }
+        .case-row .form-group { margin-bottom: 0; }
+
+        .case-number-input {
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            letter-spacing: 2px; text-align: center;
+        }
+
+        /* Step 1 login notice */
+        .login-notice {
+            padding: 14px 16px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--warning);
+            line-height: 1.6;
+        }
+        .login-notice a {
+            color: var(--accent-hover);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .login-notice .step-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: rgba(245, 158, 11, 0.2); font-size: 11px;
+            font-weight: 700; margin-right: 4px;
+        }
+
+        /* Buttons */
+        .btn-execute {
+            width: 100%; padding: 14px 24px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border: none; border-radius: 12px; color: white;
+            font-size: 15px; font-weight: 600; font-family: inherit;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 8px;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+            margin-top: 8px;
+        }
+        .btn-execute::before {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        .btn-execute:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
+        .btn-execute:hover::before { left: 100%; }
+        .btn-execute:active { transform: translateY(0); }
+        .btn-execute:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-execute.running { background: linear-gradient(135deg, #4338ca, #6d28d9); cursor: wait; }
+        .btn-execute.success { background: linear-gradient(135deg, var(--success), #059669); }
+
+        /* Status area */
+        .status-area { margin-top: 20px; display: none; }
+        .status-area.visible { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.1); border-radius: 10px;
+            margin-bottom: 8px; font-size: 13px; transition: all 0.3s ease;
+        }
+        .status-item.pending { color: var(--text-muted); }
+        .status-item.running { border-color: rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.08); color: var(--accent-hover); }
+        .status-item.running .status-icon { animation: spin 1s linear infinite; }
+        .status-item.success { border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.08); color: var(--success); }
+        .status-item.error { border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.08); color: var(--error); }
+        .status-item.skipped { border-color: rgba(100, 116, 139, 0.3); background: rgba(100, 116, 139, 0.08); color: var(--text-muted); }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .status-icon { font-size: 16px; flex-shrink: 0; }
+        .status-text { flex: 1; }
+
+        .footer { text-align: center; margin-top: 14px; font-size: 11px; color: var(--text-muted); }
+
+        #form-data-output { display: none; }
+
+        input.invalid { border-color: var(--error); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2); }
+        .validation-msg { font-size: 11px; color: var(--error); margin-top: 4px; display: none; }
+        .validation-msg.show { display: block; }
+
+        @media (max-width: 480px) {
+            .container { padding: 12px; }
+            .card { padding: 24px; }
+            .case-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="icon">📋</div>
+                <h1>案件結案流程自動化</h1>
+                <p>輸入案件資訊後點選執行，自動完成所有結案步驟</p>
+            </div>
+
+            <form id="close-case-form" autocomplete="off">
+                <!-- Step 1: Login Notice -->
+                <div class="section">
+                    <div class="section-label">🔐 SharePoint 登入（前置步驟）</div>
+                    <div class="login-notice">
+                        <div style="margin-bottom: 6px;">
+                            <span class="step-num">1</span>
+                            請先在瀏覽器中<a href="https://internationalgamessystem.sharepoint.com/teams/OLD_TS_QA/DocLib/Forms/AllItems.aspx?id=%2Fteams%2FOLD%5FTS%5FQA%2FDocLib%2F%E6%B8%AC%E8%A9%A6%E4%BA%A4%E6%8E%A5&viewid=1b2aa336%2Debf1%2D4209%2D8a1c%2D6d9f75023930" target="_blank">登入 SharePoint</a>，完成帳號、密碼及驗證碼認證。
+                        </div>
+                        <div>
+                            <span class="step-num">2</span>
+                            確認已成功進入 SharePoint 頁面後，再回來填寫案件資訊並執行。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Case Info Section -->
+                <div class="section">
+                    <div class="section-label">📁 案件資訊</div>
+
+                    <div class="case-row">
+                        <div class="form-group">
+                            <label for="case-number">單號 (6碼)</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">#️⃣</span>
+                                <input type="text" id="case-number" class="case-number-input"
+                                       placeholder="235927" maxlength="6" pattern="\d{6}" required
+                                       style="padding-left: 38px;">
+                            </div>
+                            <div class="validation-msg" id="case-number-error">請輸入 6 位數字</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="case-name">案件名稱</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">📝</span>
+                                <input type="text" id="case-name"
+                                       placeholder="滿貫大亨_活動序號兌換測試" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Execute Button -->
+                <button type="submit" class="btn-execute" id="btn-execute">
+                    <span>🚀</span>
+                    <span id="btn-text">執行結案流程</span>
+                </button>
+            </form>
+
+            <!-- Status Area -->
+            <div class="status-area" id="status-area">
+                <div class="section-label">📊 執行狀態</div>
+
+                <div class="status-item pending" id="status-sp-handover">
+                    <span class="status-icon">⏳</span>
+                    <span class="status-text">SharePoint 測試交接處理</span>
+                </div>
+                <div class="status-item pending" id="status-sp-docs">
+                    <span class="status-icon">⏳</span>
+                    <span class="status-text">SharePoint 線上文件處理</span>
+                </div>
+                <div class="status-item pending" id="status-local-move">
+                    <span class="status-icon">⏳</span>
+                    <span class="status-text">本機 0_GT測試交接處理</span>
+                </div>
+                <div class="status-item pending" id="status-local-images">
+                    <span class="status-icon">⏳</span>
+                    <span class="status-text">本機圖影片資料存放</span>
+                </div>
+            </div>
+
+            <div class="footer">
+                Powered by Antigravity AI · Case Closing Automation v1.0
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden data output for AI reading -->
+    <div id="form-data-output" data-status="idle" data-case-number="" data-case-name=""></div>
+
+    <script>
+        // Case number validation
+        document.getElementById('case-number').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+            const errorEl = document.getElementById('case-number-error');
+            if (this.value.length > 0 && this.value.length < 6) {
+                this.classList.add('invalid');
+                errorEl.classList.add('show');
+            } else {
+                this.classList.remove('invalid');
+                errorEl.classList.remove('show');
+            }
+        });
+
+        // Form submission
+        document.getElementById('close-case-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const caseNumber = document.getElementById('case-number').value.trim();
+            const caseName = document.getElementById('case-name').value.trim();
+
+            if (!/^\d{6}$/.test(caseNumber)) {
+                document.getElementById('case-number').classList.add('invalid');
+                document.getElementById('case-number-error').classList.add('show');
+                return;
+            }
+            if (!caseNumber || !caseName) {
+                alert('請填寫所有欄位');
+                return;
+            }
+
+            // Store data for AI
+            const dataOutput = document.getElementById('form-data-output');
+            dataOutput.setAttribute('data-status', 'submitted');
+            dataOutput.setAttribute('data-case-number', caseNumber);
+            dataOutput.setAttribute('data-case-name', caseName);
+
+            // Update UI - show "ready" state, NOT spinning
+            const btn = document.getElementById('btn-execute');
+            btn.classList.add('success');
+            btn.disabled = true;
+            document.getElementById('btn-text').textContent = '✅ 資料已送出';
+            document.querySelectorAll('input').forEach(inp => inp.disabled = true);
+
+            // Show instruction to go back to AI chat
+            document.getElementById('status-area').classList.add('visible');
+            document.getElementById('status-area').innerHTML = `
+                <div style="padding: 20px; text-align: center; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">💬</div>
+                    <div style="font-size: 15px; font-weight: 600; color: #10b981; margin-bottom: 8px;">
+                        請回到 Antigravity AI 聊天視窗
+                    </div>
+                    <div style="font-size: 13px; color: #94a3b8; line-height: 1.6;">
+                        在聊天中輸入以下內容，AI 將自動執行結案流程：<br>
+                        <code style="display: inline-block; margin-top: 8px; padding: 8px 16px; background: #0d1225; border: 1px solid #2a3352; border-radius: 8px; color: #818cf8; font-size: 14px;">
+                            /close-case ${caseNumber} ${caseName}
+                        </code>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Status update function (called by AI via browser tools)
+        function updateStatus(stepId, status) {
+            const el = document.getElementById(stepId);
+            if (!el) return;
+            el.className = 'status-item ' + status;
+            const icons = {
+                'pending': '⏳', 'running': '⚙️', 'success': '✅',
+                'error': '❌', 'skipped': '⏭️'
+            };
+            el.querySelector('.status-icon').textContent = icons[status] || '⏳';
+        }
+
+        function completeProcess(allSuccess) {
+            const btn = document.getElementById('btn-execute');
+            btn.classList.remove('running');
+            if (allSuccess) {
+                btn.classList.add('success');
+                document.getElementById('btn-text').textContent = '✅ 結案流程完成！';
+            } else {
+                document.getElementById('btn-text').textContent = '⚠️ 流程完成（部分步驟有警告）';
+            }
+        }
+
+        // Smart paste: auto-split "235927:滿貫大亨_活動序號兌換測試" into number + name
+        document.getElementById('case-name').addEventListener('paste', function(e) {
+            setTimeout(() => {
+                const value = this.value.trim();
+                const match = value.match(/^(\d{6})[:\s]+(.+)$/);
+                if (match) {
+                    document.getElementById('case-number').value = match[1];
+                    this.value = match[2].trim();
+                }
+            }, 10);
+        });
+
+        document.getElementById('case-number').addEventListener('paste', function(e) {
+            setTimeout(() => {
+                const value = this.value.trim();
+                const match = value.match(/^(\d{6})[:\s]+(.+)$/);
+                if (match) {
+                    this.value = match[1];
+                    document.getElementById('case-name').value = match[2].trim();
+                }
+            }, 10);
+        });
+    </script>
+</body>
+</html>

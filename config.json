@@ -1,0 +1,23 @@
+﻿{
+  "sharepoint_site_url": "https://internationalgamessystem.sharepoint.com/teams/OLD_TS_QA",
+  "sharepoint_doclib": "DocLib",
+  "sharepoint_test_handover": "測試交接",
+  "sharepoint_online_docs": "線上文件",
+  "sharepoint_browse_url": "https://internationalgamessystem.sharepoint.com/teams/OLD_TS_QA/DocLib/Forms/AllItems.aspx?id=%2Fteams%2FOLD%5FTS%5FQA%2FDocLib%2F%E6%B8%AC%E8%A9%A6%E4%BA%A4%E6%8E%A5&viewid=1b2aa336%2Debf1%2D4209%2D8a1c%2D6d9f75023930",
+  "network_base": "\\\\192.168.44.100\\ts-qa\\品檢組",
+  "gt_test_path": "0_GT測試交接",
+  "image_store_path": "圖影片資料存放區\\GT",
+  "excluded_folders_gt": [
+    "外包質檢",
+    "常用表格",
+    "常用程式",
+    "測試檔案備存",
+    "影片錄製",
+    "歷年測試軌跡"
+  ],
+  "excluded_folders_online_docs": [
+    "已結案",
+    "歷年測試資料",
+    "公版線上文件"
+  ]
+}
